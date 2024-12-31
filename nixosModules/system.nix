@@ -42,6 +42,16 @@
     documentation = {
       enable = false;  # save space
     };
+    systemd.services.kismet = {
+      description = "Kismet Wireless Network Sniffer (Headless)";
+      wantedBy = [ "multi-user.target" ];  # Ensure it starts in multi-user mode
+      serviceConfig.ExecStart = "/usr/bin/kismet_server";  # Start Kismet in server mode (no GUI)
+      serviceConfig.Restart = "always";  # Restart if it crashes
+      serviceConfig.User = "root";  # Run as root (Kismet requires elevated privileges)
+      environment.TMPDIR = "/var/tmp";  # Set a writable temporary directory
+      # Optional: You can pass additional flags here if necessary, e.g.:
+      # serviceConfig.ExecStart = "/usr/bin/kismet_server -t 0";  # Example of setting a timeout value
+    };
 
     # System packages
     environment.systemPackages = with pkgs; [
@@ -49,6 +59,8 @@
       vim
       git
       wget
+      gpsd
+      kismet
       jq
       docker-compose
       bat # cat
