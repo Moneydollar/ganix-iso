@@ -1,30 +1,49 @@
 { inputs, ganix, ... }@flakeContext:
-{
+{ config, lib, pkgs, ... }: {
   imports = [
     inputs.self.nixosModules.services
     inputs.self.nixosModules.user-root
   ];
   config = {
-    system.stateVersion = "23.05";
+    system = {
+      stateVersion = "23.05";
+    };
 
     boot = {
-      loader = {
-        systemd-boot.enable = true;  # Use systemd-boot
-        generic-extlinux-compatible.enable = false; # Ensure extlinux is disabled
-        raspberryPi.version = ganix.raspberry_model; # Keep if relevant to Pi
-      };
-
-      kernelPackages = pkgs.linuxPackages_hardened;
       kernelParams = ["cma=256M"];
+
+      # Hardened kernel for security with Raspberry Pi compatibility
+      kernelPackages = pkgs.linuxPackages_hardened;
+
       cleanTmpDir = true;
+
+      loader = {
+        systemd-boot.enable = true;
+        raspberryPi.version = ganix.raspberry_model;
+      };
 
       extraModprobeConfig = ''
         options hid_apple fnmode=0
       '';
+
+      supportedFilesystems = [ "ntfs" "vfat" ];
     };
 
-    # Remaining configurations
     time.timeZone = ganix.timezone;
+
+    documentation.enable = false;
+
+    systemd.services.kismet = {
+      description = "Kismet Wireless Network Sniffer (Headless)";
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        ExecStart = "/usr/bin/kismet_server";
+        Restart = "always";
+        User = "kismet";
+        Group = "kismet";
+      };
+      environment.TMPDIR = "/var/tmp";
+    };
 
     environment.systemPackages = with pkgs; [
       libraspberrypi
@@ -42,16 +61,45 @@
       xh
     ];
 
-    # Example filesystem configuration
-    fileSystems = {
-      "/" = {
-        device = "/dev/disk/by-label/NIXOS_SD";
-        fsType = "ext4";
+    hardware = {
+      enableRedistributableFirmware = true;
+      firmware = [
+        pkgs.firmwareLinuxNonfree
+        pkgs.wireless-regdb
+      ];
+
+      bluetooth = {
+        enable = false;
+        powerOnBoot = false;
       };
     };
 
-    swapDevices = [{ device = "/swapfile"; size = 1024; }];
-    virtualisation.docker.enable = true;
+    networking = {
+      hostName = ganix.hostname;
+      firewall = {
+        enable = true;
+        allowedTCPPorts = [ 22 80 443 ]; # SSH and web ports
+        allowedUDPPorts = [ ];
+      };
+      interfaces.wlan0.useDHCP = true;
+
+      wireless = {
+        enable = ganix.wifi_enabled;
+        interfaces = [ "wlan0" ];
+        networks = {
+          "${ganix.wifi_network_name}" = {
+            pskRaw = "${ganix.wifi_network_psk}";
+          };
+        };
+      };
+    };
+
+    sdImage = {
+      compressImage = true;
+      imageName = "${config.sdImage.imageBaseName}-${ganix.hostname}-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.img";
+    };
+
+    i18n.defaultLocale = "en_US.UTF-8";
 
     nix = {
       package = pkgs.nixUnstable;
@@ -63,6 +111,27 @@
     };
 
     nixpkgs.config.allowUnfree = true;
+
+    # Add Docker service
+    virtualisation.docker.enable = true;
+
+    fileSystems = {
+      "/" = lib.mkForce {
+        device = "/dev/disk/by-label/NIXOS_ROOT";
+        fsType = "ext4";
+      };
+      "/boot" = lib.optional (!ganix.no_boot_partition) {
+        device = "/dev/disk/by-label/NIXOS_BOOT";
+        fsType = "vfat";
+      };
+    };
+
+    swapDevices = [{ device = "/swapfile"; size = 1024; }];
+
+    security.sudo = {
+      enable = true;
+      wheelNeedsPassword = true;
+    };
+    
   };
 }
-c
