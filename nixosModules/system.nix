@@ -19,16 +19,15 @@
       cleanTmpDir = true;
 
       loader = {
-        grub.enable = false;
+        systemd-boot.enable = true;
         raspberryPi.version = ganix.raspberry_model;
-        generic-extlinux-compatible.enable = true;
       };
 
       extraModprobeConfig = ''
         options hid_apple fnmode=0
       '';
 
-      supportedFilesystems = [ "ntfs" ];
+      supportedFilesystems = [ "ntfs" "vfat" ];
     };
 
     time.timeZone = ganix.timezone;
@@ -110,23 +109,18 @@
     # Add Docker service
     virtualisation.docker.enable = true;
 
+    # Simplified file systems: main root and boot partition
     fileSystems = {
       "/" = {
-        device = "/dev/disk/by-label/NIXOS_SD";
+        device = "/dev/disk/by-label/NIXOS_ROOT";
         fsType = "ext4";
       };
-      "/media/media-store" = {
-        device = "/dev/sda2";
-        fsType = "exfat";
-        options = [
-          "defaults"
-          "gid=media"
-          "dmask=007"
-          "fmask=117"
-        ];
+      "/boot" = {
+        device = "/dev/disk/by-label/NIXOS_BOOT";
+        fsType = "vfat";
       };
     };
-    
+
     swapDevices = [{ device = "/swapfile"; size = 1024; }];
 
     security.sudo = {
