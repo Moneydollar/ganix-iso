@@ -8,23 +8,26 @@
       openssh = {
         enable = true;
         openFirewall = true;
-        settings.PermitRootLogin = "yes";
-        settings.PasswordAuthentication = false;
+        settings = {
+          PermitRootLogin = "yes";
+          PasswordAuthentication = true;
+        };
       };
 
       avahi = {
         enable = true;
         nssmdns = true;
-        publish.enable = true;
-        publish.addresses = true;
-        publish.workstation = true;
+        publish = {
+          enable = true;
+          addresses = true;
+          workstation = true;
+        };
       };
-      gpsd = {
-        enable = true;
-      }
-      
 
-    # add docker
-    virtualisation.docker.enable = true;
+      gpsd.enable = true;
+
+      # Add Docker service
+      virtualisation.docker.enable = true;
+    };
   };
 }
