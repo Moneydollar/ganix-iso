@@ -26,8 +26,7 @@
 
       gpsd.enable = true;
 
-      # Add Docker service
-      virtualisation.docker.enable = true;
+      
     };
   };
 }

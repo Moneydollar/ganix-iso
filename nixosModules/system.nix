@@ -106,6 +106,9 @@
     };
 
     nixpkgs.config.allowUnfree = true;
+    
+    # Add Docker service
+    virtualisation.docker.enable = true;
 
     fileSystems = {
       "/" = {
@@ -123,7 +126,7 @@
         ];
       };
     };
-
+    
     swapDevices = [{ device = "/swapfile"; size = 1024; }];
 
     security.sudo = {
