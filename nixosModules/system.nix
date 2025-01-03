@@ -12,67 +12,52 @@
     boot = {
       kernelParams = ["cma=256M"];
 
-      # !!! Otherwise (even if you have a Raspberry Pi 2 or 3), pick this:
-      # kernelPackages = pkgs.linux_rpi3;
+      # Use the hardened kernel for security while retaining RPi compatibility
+      kernelPackages = pkgs.linuxPackages_hardened;
 
       # Cleanup tmp on startup
       cleanTmpDir = true;
 
       loader = {
-        # NixOS wants to enable GRUB by default
         grub.enable = false;
-        # raspberryPi.enable = true;
         raspberryPi.version = ganix.raspberry_model;
         generic-extlinux-compatible.enable = true;
-        # generic-extlinux-compatible.populateCmd = lib.mkForce {};
       };
 
-      # keychron fix (?)
       extraModprobeConfig = ''
         options hid_apple fnmode=0
       '';
 
       supportedFilesystems = [ "ntfs" ];
-
     };
-    # Time
+
     time.timeZone = ganix.timezone;
 
-    # Man
-    documentation = {
-      enable = false;  # save space
-    };
+    documentation.enable = false;
+
     systemd.services.kismet = {
       description = "Kismet Wireless Network Sniffer (Headless)";
-      wantedBy = [ "multi-user.target" ];  # Ensure it starts in multi-user mode
-      serviceConfig.ExecStart = "/usr/bin/kismet_server";  # Start Kismet in server mode (no GUI)
-      serviceConfig.Restart = "always";  # Restart if it crashes
-      serviceConfig.User = "root";  # Run as root (Kismet requires elevated privileges)
-      environment.TMPDIR = "/var/tmp";  # Set a writable temporary directory
-      # Optional: You can pass additional flags here if necessary, e.g.:
-      # serviceConfig.ExecStart = "/usr/bin/kismet_server -t 0";  # Example of setting a timeout value
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig.ExecStart = "/usr/bin/kismet_server";
+      serviceConfig.Restart = "always";
+      serviceConfig.User = "root";
+      environment.TMPDIR = "/var/tmp";
     };
 
-    # System packages
     environment.systemPackages = with pkgs; [
       libraspberrypi
       vim
       git
       wget
       gpsd
+      btop
+      fastfetch
+      pkgs.linuxKernel.packages.linux_hardened.rtl8812au
       kismet
       jq
       docker-compose
-      bat # cat
-      # exa # ls
-      # ripgrep # grep
-      # fd # find
-      # procs # ps
-      # sd # sed
-      # du-dust # du
-      # bandwhich
-      xh # http
-      # macchina
+      bat
+      xh
     ];
 
     hardware = {
@@ -83,24 +68,15 @@
       ];
 
       bluetooth = {
-        # package = pkgs.bluez;
         enable = false;
         powerOnBoot = false;
       };
-
     };
 
     networking = {
       hostName = ganix.hostname;
       firewall.enable = false;
-      interfaces.wlan0 = {
-        useDHCP = true;
-        # ipv4.addresses = [{
-        #   # I used static IP over WLAN because I want to use it as local DNS resolver
-        #   address = "192.168.100.4";
-        #   prefixLength = 24;
-        # }];
-      };
+      interfaces.wlan0.useDHCP = true;
 
       wireless = {
         enable = ganix.wifi_enabled;
@@ -110,22 +86,16 @@
             pskRaw = "${ganix.wifi_network_psk}";
           };
         };
-
       };
-
-      # Enable eth0 later
-      # interfaces.eth0.useDHCP = true;
-      # useDHCP = false;
     };
 
-    sdImage.compressImage = false;
-    sdImage.imageName = "${config.sdImage.imageBaseName}-${ganix.hostname}-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.img";
-
-    i18n = {
-      defaultLocale = "en_US.UTF-8";
+    sdImage = {
+      compressImage = false;
+      imageName = "${config.sdImage.imageBaseName}-${ganix.hostname}-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.img";
     };
 
-    # Nix
+    i18n.defaultLocale = "en_US.UTF-8";
+
     nix = {
       package = pkgs.nixUnstable;
       extraOptions = ''
@@ -135,11 +105,8 @@
       '';
     };
 
-    nixpkgs.config = {
-      allowUnfree = true;
-    };
+    nixpkgs.config.allowUnfree = true;
 
-    # File systems configuration for using the installer's partition layout
     fileSystems = {
       "/" = {
         device = "/dev/disk/by-label/NIXOS_SD";
@@ -150,18 +117,15 @@
         fsType = "exfat";
         options = [
           "defaults"
-          "gid=media"  # for non-root access
+          "gid=media"
           "dmask=007"
-          "fmask=117"  # not having everything be executable
-      ];
-
+          "fmask=117"
+        ];
       };
     };
 
-    # !!! Adding a swap file is optional, but strongly recommended!
     swapDevices = [{ device = "/swapfile"; size = 1024; }];
 
-    # User settings
     security.sudo = {
       enable = true;
       wheelNeedsPassword = false;
