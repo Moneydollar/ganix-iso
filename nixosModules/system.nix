@@ -109,17 +109,16 @@
     # Add Docker service
     virtualisation.docker.enable = true;
 
-    # Simplified file systems: main root and boot partition
-    fileSystems = {
-      "/" = {
-        device = "/dev/disk/by-label/NIXOS_ROOT";
-        fsType = "ext4";
-      };
-      "/boot" = {
-        device = "/dev/disk/by-label/NIXOS_BOOT";
-        fsType = "vfat";
-      };
-    };
+   fileSystems = {
+  "/" = lib.mkForce {
+    device = "/dev/disk/by-label/NIXOS_ROOT";
+    fsType = "ext4";
+  };
+  "/boot" = {
+    device = "/dev/disk/by-label/NIXOS_BOOT";
+    fsType = "vfat";
+  };
+};
 
     swapDevices = [{ device = "/swapfile"; size = 1024; }];
 
