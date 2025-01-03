@@ -51,7 +51,7 @@
       wget
       gpsd
       btop
-      fastfetch
+      neofetch
       pkgs.linuxKernel.packages.linux_hardened.rtl8812au
       kismet
       jq
@@ -106,7 +106,7 @@
     };
 
     nixpkgs.config.allowUnfree = true;
-    
+
     # Add Docker service
     virtualisation.docker.enable = true;
 
