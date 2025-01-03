@@ -120,7 +120,7 @@
         device = "/dev/disk/by-label/NIXOS_ROOT";
         fsType = "ext4";
       };
-      "/boot" = lib.optional (!ganix.no_boot_partition) {
+      "/boot" = {
         device = "/dev/disk/by-label/NIXOS_BOOT";
         fsType = "vfat";
       };
@@ -132,6 +132,6 @@
       enable = true;
       wheelNeedsPassword = true;
     };
-    
+
   };
 }
