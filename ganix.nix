@@ -1,10 +1,10 @@
 {
-  hostname = warPi;
-  username = pi;
-  timezone = UTC;
-  raspberry_model = 4;
+  hostname = null;
+  username = null;
+  timezone = null;
+  raspberry_model = null;
   ssh_key = [];
-  wifi_enabled = true;
-  wifi_network_name = NSA_Mobile_Team_13;
-  wifi_network_psk = JfpNJla17!;
+  wifi_enabled = null;
+  wifi_network_name = null;
+  wifi_network_psk = null;
 }
