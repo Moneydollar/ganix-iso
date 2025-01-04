@@ -17,9 +17,14 @@
 
       cleanTmpDir = true;
 
-      loader = lib.mkForce {
-        systemd-boot.enable = true;
+     
+      loader = {
+        # NixOS wants to enable GRUB by default
+        grub.enable = false;
+        # raspberryPi.enable = true;
         raspberryPi.version = ganix.raspberry_model;
+        generic-extlinux-compatible.enable = true;
+        # generic-extlinux-compatible.populateCmd = lib.mkForce {};
       };
 
       extraModprobeConfig = ''
