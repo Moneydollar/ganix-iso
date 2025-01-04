@@ -18,9 +18,9 @@
       cleanTmpDir = true;
 
       loader = lib.mkForce {
-        extlinux.enable = true;
+        systemd-boot.enable = true;
         raspberryPi.version = ganix.raspberry_model;
-    };
+      };
 
       extraModprobeConfig = ''
         options hid_apple fnmode=0
